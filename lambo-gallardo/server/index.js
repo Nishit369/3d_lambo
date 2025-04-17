@@ -15,6 +15,6 @@ app.use('/api/v1/clipdrop', clipdropRoutes);
 app.get("/", (req, res) => {
     res.status(200).json({ message: "Hello from ClipDrop Image Generator API" });
 });
-app.use("/temp-textures", express.static("temp-textures"));
+app.use('/temp-textures', express.static('/tmp/temp-textures'));
 
 app.listen(8080, () => console.log("SERVER STARTED"));
