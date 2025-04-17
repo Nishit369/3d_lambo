@@ -11,7 +11,7 @@ dotenv.config();
 
 const router = express.Router();
 
-const TEMP_DIR = path.join("temp-textures");
+const TEMP_DIR = "/tmp/temp-textures";
 
 // Ensure temp-textures dir exists
 if (!fs.existsSync(TEMP_DIR)) {
@@ -21,7 +21,7 @@ if (!fs.existsSync(TEMP_DIR)) {
 // Use express-session (add this in main server file too if global)
 router.use(
   session({
-    secret: "your-secret-key",
+    secret: "whostoputthisterriblebeastieoffthehunteh",
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 60 * 60 * 1000 }, // 1 hour
