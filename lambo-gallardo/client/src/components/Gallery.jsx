@@ -114,7 +114,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
   const fetchServerTextures = async (existingTextures = []) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/clipdrop/');
+      const response = await fetch('https://threed-lambo.onrender.com/api/v1/clipdrop/');
       const data = await response.json();
       
       if (data.files && Array.isArray(data.files)) {
@@ -123,7 +123,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
           const filename = file.split('/').pop();
           return {
             _id: `server-${index}-${Date.now()}`,
-            image: `http://localhost:8080/temp-textures/${filename}`,
+            image: `https://threed-lambo.onrender.com/tmp/temp-textures/${filename}`,
             prompt: `Server texture ${index + 1}`,
             source: 'server'
           };

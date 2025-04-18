@@ -7,12 +7,14 @@ import { rev } from '../assets';
 import gsap from "gsap"
 import * as THREE from "three";
 import { downloadCanvasToImage,reader } from '../config/helpers';
+import path from 'path';
 import { EditorTabs, DecalTypes, FilterTabs, DesignTabs } from '../config/constants';
 import { fadeAnimation, slideAnimation } from '../config/motion';
 import { AiPicker, ColorPicker, CustomButton, FilePicker, Tab } from '../components';
 import { TextInput } from '../components/TextInput';
 import Gallery from '../components/Gallery';
 import cameraRef from '../canvas/CameraRef';
+
 
 
 
@@ -41,14 +43,14 @@ const Customizer = () => {
     // Function to fetch stored textures from the server
     const fetchStoredTextures = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/clipdrop/');
+            const response = await fetch('https://threed-lambo.onrender.com/api/v1/clipdrop/');
             const data = await response.json();
             
             if (data.files && Array.isArray(data.files)) {
                 // Map the file paths to texture objects that can be used by the Gallery
                 const textures = data.files.map((file, index) => ({
                     _id: `stored-${index}`,
-                    image: `http://localhost:8080/temp-textures/${path.basename(file)}`,
+                    image: `https://threed-lambo.onrender.com/tmp/temp-textures/${path.basename(file)}`,
                     prompt: `Stored texture ${index + 1}`
                 }));
                 setStoredTextures(textures);
@@ -132,7 +134,7 @@ const Customizer = () => {
             setGeneratingImg(true);
             
             // Send the prompt to the server for image generation
-            const response = await fetch('http://localhost:8080/api/v1/clipdrop/', {
+            const response = await fetch('https://threed-lambo.onrender.com/api/v1/clipdrop/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -148,7 +150,7 @@ const Customizer = () => {
                 // Create a texture object with the file path
                 const newTextureObj = {
                     _id: Date.now().toString(),
-                    image: `http://localhost:8080/${data.file}`, // Create URL to access the file
+                    image: `https://threed-lambo.onrender.com/${data.file}`, // Create URL to access the file
                     prompt: prompt,
                 };
                 
