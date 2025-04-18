@@ -53,7 +53,6 @@ const Customizer = () => {
                 // Map the file paths to texture objects that can be used by the Gallery
                 const textures = data.files.map((file, index) => {
                     // Direct use of the path from API
-                    console.log("file",file)
                     return {
                         _id: `stored-${index}`,
                         image: file, 
@@ -164,11 +163,9 @@ const Customizer = () => {
             });
             
             const data = await response.json();
-            console.log("data custom",data)
             if (data && data.file) {
                 // Use the relative path directly - the API should return "/temp-textures/filename.png"
                 const imagePath = data.file;
-                console.log("image path",imagePath)
                 
                 // Create a texture object with the file path
                 const newTextureObj = {

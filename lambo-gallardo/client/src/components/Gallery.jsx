@@ -127,7 +127,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     
     // Make sure the path starts with a slash
     const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-    console.log(normalizedPath)
+
     // Return the full URL
     return `https://threed-lambo.onrender.com${normalizedPath}`;
   };
@@ -165,7 +165,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     try {
       const response = await fetch('https://threed-lambo.onrender.com/api/v1/clipdrop/');
       const data = await response.json();
-      console.log("data",data)
+
       
       if (data.files && Array.isArray(data.files)) {
         // Map the file paths to texture objects
@@ -255,7 +255,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     }
     
     // Full URL for the decal
-    console.log("text",texture.image)
+
     const fullImageUrl = getImageUrl(texture.image);
     handleDecals("full", fullImageUrl);
   };

@@ -21,7 +21,6 @@ const TEMP_DIR = path.join(__dirname, "..", "temp-textures");
 // Create the folder if it doesn't exist
 if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
-  console.log("✅ Created temp-textures directory:", TEMP_DIR);
 }
 
 // Use express-session
@@ -75,7 +74,6 @@ router.route("/").post(async (req, res) => {
     fs.writeFileSync(filepath, imgBuffer);
 
     const relativePath = `/temp-textures/${filename}`;
-    console.log("🖼️ Saved file:", relativePath);
     res.status(200).json({
       message: "Image saved successfully",
       file: relativePath,
