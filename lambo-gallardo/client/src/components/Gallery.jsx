@@ -14,14 +14,39 @@ const LamborghiniTextureSelectorWithMenu = ({ textures, isLoading, error, onText
     setIsOpen(false);
   };
 
-  const clickSound = ()=>{
-    const audio = new Audio("/click.mp3");
-    audio.play();
-}
-const hoverSound = () => {
-  const audio = new Audio("/hover.mp3");
-  audio.play();
-};
+  const clickSound = () => {
+    try {
+      const audio = new Audio("/click.mp3");
+      audio.play().catch(err => console.log("Audio play error:", err));
+    } catch (error) {
+      console.error("Error playing click sound:", error);
+    }
+  };
+  
+  const hoverSound = () => {
+    try {
+      const audio = new Audio("/hover.mp3");
+      audio.play().catch(err => console.log("Audio play error:", err));
+    } catch (error) {
+      console.error("Error playing hover sound:", error);
+    }
+  };
+
+  // Function to construct proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // If it's already a full URL, return it
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Make sure the path starts with a slash
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    
+    // Return the full URL
+    return `https://threed-lambo.onrender.com${normalizedPath}`;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -37,7 +62,7 @@ const hoverSound = () => {
     <div className="relative">
       <button
         onClick={toggleOpen}
-        onMouseEnter={()=>{hoverSound()}} 
+        onMouseEnter={hoverSound} 
         className={`texture-menu-button bg-black text-white rounded-md shadow-md p-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-300 hover:bg-gray-800 ${isOpen ? 'rounded-t-md rounded-b-none' : ''}`}
         >
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +91,7 @@ const hoverSound = () => {
                 }`}
               >
                 <img
-                  src={texture.image}
+                  src={getImageUrl(texture.image)}
                   alt={texture.prompt}
                   className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
                 />
@@ -91,6 +116,22 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
   const [error, setError] = useState(null);
   const [selectedCarTexture, setSelectedCarTexture] = useState(null);
 
+  // Function to construct proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // If it's already a full URL, return it
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Make sure the path starts with a slash
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    console.log(normalizedPath)
+    // Return the full URL
+    return `https://threed-lambo.onrender.com${normalizedPath}`;
+  };
+
   // Load stored textures + selected texture from both session storage and server
   useEffect(() => {
     const savedTextures = sessionStorage.getItem("allTextures");
@@ -98,15 +139,23 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
 
     let initialTextures = [];
     if (savedTextures) {
-      initialTextures = JSON.parse(savedTextures);
+      try {
+        initialTextures = JSON.parse(savedTextures);
+      } catch (e) {
+        console.error("Error parsing saved textures from session storage:", e);
+      }
     }
 
     // Fetch textures from server
     fetchServerTextures(initialTextures);
 
     if (savedTexture) {
-      const parsed = JSON.parse(savedTexture);
-      setSelectedCarTexture(parsed);
+      try {
+        const parsed = JSON.parse(savedTexture);
+        setSelectedCarTexture(parsed);
+      } catch (e) {
+        console.error("Error parsing saved texture from session storage:", e);
+      }
     }
   }, []);
 
@@ -116,14 +165,14 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     try {
       const response = await fetch('https://threed-lambo.onrender.com/api/v1/clipdrop/');
       const data = await response.json();
+      console.log("data",data)
       
       if (data.files && Array.isArray(data.files)) {
         // Map the file paths to texture objects
         const serverTextures = data.files.map((file, index) => {
-          const filename = file.split('/').pop();
           return {
             _id: `server-${index}-${Date.now()}`,
-            image: `https://threed-lambo.onrender.com/tmp/temp-textures/${filename}`,
+            image: file, 
             prompt: `Server texture ${index + 1}`,
             source: 'server'
           };
@@ -135,7 +184,12 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
         
         const mergedTextures = [...existingTextures, ...uniqueServerTextures];
         setTextures(mergedTextures);
-        sessionStorage.setItem("allTextures", JSON.stringify(mergedTextures));
+        
+        try {
+          sessionStorage.setItem("allTextures", JSON.stringify(mergedTextures));
+        } catch (e) {
+          console.error("Error saving textures to session storage:", e);
+        }
       }
     } catch (error) {
       console.error("Error fetching server textures:", error);
@@ -173,7 +227,11 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
       
       if (updated) {
         setTextures(currentTextures);
-        sessionStorage.setItem("allTextures", JSON.stringify(currentTextures));
+        try {
+          sessionStorage.setItem("allTextures", JSON.stringify(currentTextures));
+        } catch (e) {
+          console.error("Error saving textures to session storage:", e);
+        }
       }
     }
   }, [storedTextures]);
@@ -190,8 +248,16 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     }
   
     setSelectedCarTexture(texture);
-    sessionStorage.setItem("selectedCarTexture", JSON.stringify(texture));
-    handleDecals("full", texture.image);
+    try {
+      sessionStorage.setItem("selectedCarTexture", JSON.stringify(texture));
+    } catch (e) {
+      console.error("Error saving selected texture to session storage:", e);
+    }
+    
+    // Full URL for the decal
+    console.log("text",texture.image)
+    const fullImageUrl = getImageUrl(texture.image);
+    handleDecals("full", fullImageUrl);
   };
 
   // Add newly generated texture
@@ -209,12 +275,23 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
     if (!textures.some(t => t.image === newTexture.image)) {
       const updatedTextures = [...textures, newTexture];
       setTextures(updatedTextures);
-      sessionStorage.setItem("allTextures", JSON.stringify(updatedTextures));
+      try {
+        sessionStorage.setItem("allTextures", JSON.stringify(updatedTextures));
+      } catch (e) {
+        console.error("Error saving textures to session storage:", e);
+      }
       
       // Auto-select the new texture
       setSelectedCarTexture(newTexture);
-      sessionStorage.setItem("selectedCarTexture", JSON.stringify(newTexture));
-      handleDecals("full", newTexture.image);
+      try {
+        sessionStorage.setItem("selectedCarTexture", JSON.stringify(newTexture));
+      } catch (e) {
+        console.error("Error saving selected texture to session storage:", e);
+      }
+      
+      // Full URL for the decal
+      const fullImageUrl = getImageUrl(newTexture.image);
+      handleDecals("full", fullImageUrl);
     }
   };
 
@@ -224,7 +301,7 @@ const Gallery = ({ handleDecals, newTexture, storedTextures = [] }) => {
         <div className="mb-4">
           <h4 className="text-lg font-semibold text-gray-400">Selected Finish:</h4>
           <img
-            src={selectedCarTexture.image}
+            src={getImageUrl(selectedCarTexture.image)}
             alt={selectedCarTexture.prompt}
             className="w-32 h-32 object-cover rounded-md shadow-md"
           />

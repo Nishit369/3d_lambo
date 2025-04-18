@@ -6,17 +6,15 @@ import {download} from '../assets'
 import { rev } from '../assets';
 import gsap from "gsap"
 import * as THREE from "three";
-import { downloadCanvasToImage,reader } from '../config/helpers';
-import path from 'path';
+import { downloadCanvasToImage, reader } from '../config/helpers';
+// Remove path import since it's a Node.js module not available in browser
+// import path from 'path';
 import { EditorTabs, DecalTypes, FilterTabs, DesignTabs } from '../config/constants';
 import { fadeAnimation, slideAnimation } from '../config/motion';
 import { AiPicker, ColorPicker, CustomButton, FilePicker, Tab } from '../components';
 import { TextInput } from '../components/TextInput';
 import Gallery from '../components/Gallery';
 import cameraRef from '../canvas/CameraRef';
-
-
-
 
 const Customizer = () => {
     const snap = useSnapshot(state);
@@ -40,6 +38,11 @@ const Customizer = () => {
         fetchStoredTextures();
     }, []);
 
+    // Extract filename from path - browser-side replacement for path.basename
+    const getFilenameFromPath = (filePath) => {
+        return filePath.split('/').pop();
+    };
+
     // Function to fetch stored textures from the server
     const fetchStoredTextures = async () => {
         try {
@@ -48,11 +51,15 @@ const Customizer = () => {
             
             if (data.files && Array.isArray(data.files)) {
                 // Map the file paths to texture objects that can be used by the Gallery
-                const textures = data.files.map((file, index) => ({
-                    _id: `stored-${index}`,
-                    image: `https://threed-lambo.onrender.com/tmp/temp-textures/${path.basename(file)}`,
-                    prompt: `Stored texture ${index + 1}`
-                }));
+                const textures = data.files.map((file, index) => {
+                    // Direct use of the path from API
+                    console.log("file",file)
+                    return {
+                        _id: `stored-${index}`,
+                        image: file, 
+                        prompt: `Stored texture ${index + 1}`
+                    };
+                });
                 setStoredTextures(textures);
             }
         } catch (error) {
@@ -60,31 +67,43 @@ const Customizer = () => {
         }
     };
 
-    const clickSound = ()=>{
-        const audio = new Audio("/click.mp3");
-        audio.play();
+    const clickSound = () => {
+        try {
+            const audio = new Audio("/click.mp3");
+            audio.play().catch(err => console.log("Audio play error:", err));
+        } catch (error) {
+            console.error("Error playing click sound:", error);
+        }
     }
 
     const playSound = () => {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
+        try {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(err => console.log("Audio play error:", err));
+        } catch (error) {
+            console.error("Error playing sound:", error);
+        }
     }
 
     const hoverSound = () => {
-        const audio = new Audio("/hover.mp3");
-        audio.play();
-      };
+        try {
+            const audio = new Audio("/hover.mp3");
+            audio.play().catch(err => console.log("Audio play error:", err));
+        } catch (error) {
+            console.error("Error playing hover sound:", error);
+        }
+    };
 
     const moveCameraTo = (pos, lookAt) => {
-        if (!cameraRef.current) return
+        if (!cameraRef.current) return;
         gsap.to(cameraRef.current.position, {
             ...pos,
             duration: 2,
             ease: 'power2.inOut',
             onUpdate: () => {
-                cameraRef.current.lookAt(lookAt)
+                cameraRef.current.lookAt(lookAt);
             }
-        })
+        });
     }
 
     const generateTabContent = () => {
@@ -145,19 +164,24 @@ const Customizer = () => {
             });
             
             const data = await response.json();
-            
+            console.log("data custom",data)
             if (data && data.file) {
+                // Use the relative path directly - the API should return "/temp-textures/filename.png"
+                const imagePath = data.file;
+                console.log("image path",imagePath)
+                
                 // Create a texture object with the file path
                 const newTextureObj = {
                     _id: Date.now().toString(),
-                    image: `https://threed-lambo.onrender.com/${data.file}`, // Create URL to access the file
+                    image: imagePath, // Store only the relative path
                     prompt: prompt,
                 };
                 
                 setNewTexture(newTextureObj);
                 
-                // Apply the texture to the model
-                handleDecals(type, newTextureObj.image);
+                // Apply the texture to the model - add server URL here
+                const fullImageUrl = `https://threed-lambo.onrender.com${imagePath}`;
+                handleDecals(type, fullImageUrl);
                 
                 // Refresh the list of stored textures
                 fetchStoredTextures();
@@ -302,7 +326,14 @@ const Customizer = () => {
                        <CustomButton
                             type="filled"
                             title={effectTitle}
-                            handleClick={()=>{effectTitle==="Add Effects" ? setEffectTitle("Remove effects") : setEffectTitle("Add Effects"); state.fxEnabled=!state.fxEnabled}}
+                            handleClick={()=>{
+                                if(effectTitle==="Add Effects") {
+                                    setEffectTitle("Remove effects");
+                                } else {
+                                    setEffectTitle("Add Effects");
+                                }
+                                state.fxEnabled = !state.fxEnabled;
+                            }}
                             customStyles = "w-fit px-4 py-2.5 mx-2 font-bold text-sm"
                         />
                         <CustomButton
@@ -323,7 +354,7 @@ const Customizer = () => {
                                 tab={tab}
                                 isFilterTab
                                 isActiveTab={activeFilterTab[tab.name]}
-                                handleClick={() => { clickSound();handleActiveFilterTab(tab.name)}}
+                                handleClick={() => { clickSound(); handleActiveFilterTab(tab.name); }}
                             />
                         ))}
                         <button className='download-btn' onClick={()=>{clickSound(); playSound(); }} onMouseEnter={hoverSound}>
@@ -366,9 +397,7 @@ const Customizer = () => {
                                 ))}
                                 {generateDesignTabContent()}
                             </div>
-                            
                         </div>
-                        
                     </motion.div>
                 </>
             )}
